@@ -1,0 +1,71 @@
+services:
+  bookstack:
+    image: lscr.io/linuxserver/bookstack
+    container_name: wiki
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - APP_URL=${APP_URL}
+      - APP_LANG=${APP_LANG}
+      - APP_KEY=${APP_KEY}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_DATABASE=${DB_DATABASE}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASS}
+     # ==== LDAP desde .env ====
+#      - AUTH_METHOD=${AUTH_METHOD}
+#      - LDAP_SERVER=${LDAP_SERVER}
+#      - LDAP_START_TLS=${LDAP_START_TLS}
+#      - LDAP_BASE_DN=${LDAP_BASE_DN}
+#      - LDAP_DN=${LDAP_DN}
+#      - LDAP_PASS=${LDAP_PASS}
+#      - LDAP_USER_FILTER=${LDAP_USER_FILTER}
+#      - LDAP_VERSION=${LDAP_VERSION}
+#      - LDAP_ID_ATTRIBUTE=${LDAP_ID_ATTRIBUTE}
+#      - LDAP_EMAIL_ATTRIBUTE=${LDAP_EMAIL_ATTRIBUTE}
+#      - LDAP_DISPLAY_NAME_ATTRIBUTE=${LDAP_DISPLAY_NAME_ATTRIBUTE}
+#      - LDAP_THUMBNAIL_ATTRIBUTE=${LDAP_THUMBNAIL_ATTRIBUTE}
+#      - LDAP_USER_TO_GROUPS=${LDAP_USER_TO_GROUPS}
+#      - LDAP_GROUP_ATTRIBUTE=${LDAP_GROUP_ATTRIBUTE}
+#      - LDAP_REMOVE_FROM_GROUPS=${LDAP_REMOVE_FROM_GROUPS}
+     # ==== SMTP Office365 ====
+#      - MAIL_DRIVER=${MAIL_DRIVER}
+#      - MAIL_HOST=${MAIL_HOST}
+#      - MAIL_PORT=${MAIL_PORT}
+#      - MAIL_ENCRYPTION=${MAIL_ENCRYPTION}
+#      - MAIL_USERNAME=${MAIL_USERNAME}
+#      - MAIL_PASSWORD=${MAIL_PASSWORD}
+#      - MAIL_FROM=${MAIL_FROM}
+#      - MAIL_FROM_NAME=BookStack
+    volumes:
+      - ./bookstack_app_data:/config
+    ports:
+      - "6875:80"
+    restart: unless-stopped
+    depends_on:
+      bookstack-db:
+        condition: service_healthy
+
+  bookstack-db:
+    image: lscr.io/linuxserver/mariadb
+    container_name: wiki-db
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${DB_DATABASE}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+    volumes:
+      - ./bookstack_db_data:/config
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -uroot -p$${MYSQL_ROOT_PASSWORD} -h 127.0.0.1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
